@@ -2,8 +2,7 @@ import nltk
 from nltk.corpus import reuters
 import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
-
-# Download required NLTK data
+from joblib import dump
 nltk.download('reuters')
 nltk.download('punkt')
 
@@ -19,17 +18,15 @@ print(f"Number of documents: {len(documents)}")
 vectorizer = TfidfVectorizer(max_features=100)  # Using 100 features
 document_embeddings = vectorizer.fit_transform(documents).toarray()
 
-# Save embeddings
 np.save('document_embeddings.npy', document_embeddings)
 print(f"Saved document embeddings with shape: {document_embeddings.shape}")
 
-# Save documents
 with open('documents.txt', 'w', encoding='utf-8') as f:
     for doc in documents:
         f.write(doc + "\n===DOCUMENT_SEPARATOR===\n")
 print(f"Saved {len(documents)} documents to documents.txt")
 
-# Save vectorizer for consistent transformation
-from joblib import dump
+
+
 dump(vectorizer, 'vectorizer.joblib')
 print("Saved vectorizer model")

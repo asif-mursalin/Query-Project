@@ -23,7 +23,6 @@ def retrieve_top_k(query_embedding, doc_embeddings, k=5):
     top_k_indices = similarities[0].argsort()[-k:][::-1]
     return [(documents[i], similarities[0][i]) for i in top_k_indices]
 
-# Streamlit UI
 st.title("Document Search Engine")
 
 # Input query
@@ -32,11 +31,9 @@ query = st.text_input("Enter your search query:")
 if st.button("Search"):
     if query:
         try:
-            # Get query embedding and find similar documents
             query_embedding = get_query_embedding(query)
             results = retrieve_top_k(query_embedding, document_embeddings)
             
-            # Display results
             st.write("### Top 5 Most Relevant Documents:")
             for i, (doc, score) in enumerate(results, 1):
                 with st.expander(f"Document {i} (Similarity: {score:.3f})"):
