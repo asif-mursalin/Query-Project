@@ -1,44 +1,27 @@
 import streamlit as st
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
-from joblib import load
-
-# Load document embeddings and vectorizer
-document_embeddings = np.load("./embeddings.npy")
-vectorizer = load('vectorizer.joblib')
-
-# Load documents
+# Load precomputed document embeddings (Assuming embeddings.npy and documents.txt exist)
+embeddings = np.load("document_embeddings.npy")
 with open("documents.txt", "r", encoding="utf-8") as f:
-    documents = f.read().split('===DOCUMENT_SEPARATOR===')
-documents = [doc.strip() for doc in documents if doc.strip()]
+    documents = f.readlines()
+def retrieve_top_k(query_embedding, embeddings, k=10):
+    """Retrieve top-k most similar documents using cosine similarity."""
+    similarities = cosine_similarity(query_embedding.reshape(1, -1), embeddings)[0]
+    top_k_indices = similarities.argsort()[-k:][::-1]
+    return [(documents[i], similarities[i]) for i in top_k_indices]
 
-def get_query_embedding(query):
-    """Convert query text to embedding using saved vectorizer"""
-    query_embedding = vectorizer.transform([query]).toarray()
-    return query_embedding[0]
-
-def retrieve_top_k(query_embedding, doc_embeddings, k=5):
-    """Retrieve top-k most similar documents using cosine similarity"""
-    similarities = cosine_similarity(query_embedding.reshape(1, -1), doc_embeddings)
-    top_k_indices = similarities[0].argsort()[-k:][::-1]
-    return [(documents[i], similarities[0][i]) for i in top_k_indices]
-
-st.title("Document Search Engine")
-
+# Streamlit UI
+st.title("Information Retrieval using Document Embeddings")
 # Input query
-query = st.text_input("Enter your search query:")
-
+query = st.text_input("Enter your query:")
+# Load or compute query embedding (Placeholder: Replace with actual embedding model)
+def get_query_embedding(query):
+    return np.random.rand(embeddings.shape[1]) # Replace with actual embedding function
 if st.button("Search"):
-    if query:
-        try:
-            query_embedding = get_query_embedding(query)
-            results = retrieve_top_k(query_embedding, document_embeddings)
-            
-            st.write("### Top 5 Most Relevant Documents:")
-            for i, (doc, score) in enumerate(results, 1):
-                with st.expander(f"Document {i} (Similarity: {score:.3f})"):
-                    st.write(doc[:500] + "..." if len(doc) > 500 else doc)
-        except Exception as e:
-            st.error(f"An error occurred: {str(e)}")
-    else:
-        st.warning("Please enter a search query.")
+    query_embedding = get_query_embedding(query)
+    results = retrieve_top_k(query_embedding, embeddings)
+# Display results
+    st.write("### Top 10 Relevant Documents:")
+    for doc, score in results:
+        st.write(f"- **{doc.strip()}** (Score: {score:.4f})")
